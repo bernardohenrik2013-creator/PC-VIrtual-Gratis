@@ -1,0 +1,37 @@
+name: Windows-PC-Virtual
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+    - name: Baixando e Configurando o Ngrok
+      run: |
+        Invoke-WebRequest https://equinox.io -OutFile ngrok.zip
+        Expand-Archive ngrok.zip
+        
+    - name: Autenticando o Token do Ngrok
+      run: |
+        # Substitua o seu_token_aqui pelo Token real gerado na sua conta Ngrok
+        .\ngrok\ngrok.exe authtoken seu_token_aqui
+        
+    - name: Habilitando o Acesso ao Servidor Remoto (RDP)
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+        
+    - name: Criando o Túnel de Conexão RDP
+      run: |
+        Start-Process .\ngrok\ngrok.exe -ArgumentList "tcp 3389"
+        
+    - name: Mantendo a Máquina Ativa e Exibindo Dados
+      run: |
+        Write-Host "Máquina criada com sucesso! Use o IP do painel do Ngrok para se conectar."
+        Write-Host "Usuário padrão: runneradmin"
+        Start-Sleep -Seconds 21600
+        
